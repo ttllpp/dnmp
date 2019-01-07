@@ -1,0 +1,59 @@
+version: '3'
+services:
+  redis:
+    image: redis:4.0
+    #ports:
+    #  - "127.0.0.1:6379:6379"
+    volumes:
+      - ./redis/redis.conf:/etc/redis.conf:ro
+    restart: always
+    entrypoint: ["redis-server", "/etc/redis.conf"]
+    container_name: "my-redis"
+  memcached:
+    image: memcached:1.5-alpine
+    #ports:
+    #  - "127.0.0.1:11211:11211"
+    restart: always
+    entrypoint: ["memcached", "-m", "64"]
+    container_name: "my-memcached"
+  mysql:
+    image: mysql:5.6.42
+    #ports:
+    #    - "127.0.0.1:3306:3306"
+    environment:
+        - MYSQL_DATABASE=mydb
+        - MYSQL_USER=developer
+        - MYSQL_PASSWORD=root
+        - MYSQL_ROOT_PASSWORD=123456
+    volumes:
+        - ./mysql:/var/lib/mysql
+        - ./mysqlCnf/my.cnf:/etc/mysql/conf.d/local.cnf
+    restart: always
+    container_name: "my-mysql"
+  php-fpm:
+    build: ./php-fpm/
+    volumes:
+      - ./php:/data/wwwroot:rw
+      - ./php-fpm/php.ini:/usr/local/etc/php/php.ini:ro
+    restart: always
+    links:
+      - memcached
+      - mysql
+      - redis
+    container_name: "my-php-fpm"
+  nginx:
+    image: nginx:1.15.6-alpine
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/cert:/etc/nginx/cert:ro
+      - ./nginx/logs:/var/log/nginx/logs:rw
+      - ./nginx/fastcgi.conf:/etc/nginx/fastcgi.conf:ro
+      - ./php:/usr/share/nginx/html:rw
+    restart: always
+    links:
+      - php-fpm
+    container_name: "my-nginx"
