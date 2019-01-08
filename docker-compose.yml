@@ -6,11 +6,14 @@ services:
     #  - "127.0.0.1:6379:6379"
     volumes:
       - ./redis/redis.conf:/etc/redis.conf:ro
+      - /etc/localtime:/etc/localtime:ro 
     restart: always
     entrypoint: ["redis-server", "/etc/redis.conf"]
     container_name: "my-redis"
   memcached:
     image: memcached:1.5-alpine
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
     #ports:
     #  - "127.0.0.1:11211:11211"
     restart: always
@@ -28,6 +31,7 @@ services:
     volumes:
         - ./mysql:/var/lib/mysql
         - ./mysqlCnf/my.cnf:/etc/mysql/conf.d/local.cnf
+        - /etc/localtime:/etc/localtime:ro
     restart: always
     container_name: "my-mysql"
   php-fpm:
@@ -35,6 +39,7 @@ services:
     volumes:
       - ./php:/data/wwwroot:rw
       - ./php-fpm/php.ini:/usr/local/etc/php/php.ini:ro
+      - /etc/localtime:/etc/localtime:ro
     restart: always
     links:
       - memcached
@@ -53,6 +58,7 @@ services:
       - ./nginx/logs:/var/log/nginx/logs:rw
       - ./nginx/fastcgi.conf:/etc/nginx/fastcgi.conf:ro
       - ./php:/usr/share/nginx/html:rw
+      - /etc/localtime:/etc/localtime:ro
     restart: always
     links:
       - php-fpm
